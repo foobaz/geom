@@ -17,9 +17,9 @@ func appendPointCoords(dst []byte, point geom.Point, dimension int) []byte {
 		}
 
 		if i < elementCount {
-			dst = strconv.AppendFloat(dst, nan, 'g', -1, 64)
-		} else {
 			dst = strconv.AppendFloat(dst, point[i], 'g', -1, 64)
+		} else {
+			dst = strconv.AppendFloat(dst, nan, 'g', -1, 64)
 		}
 	}
 
@@ -36,7 +36,7 @@ func appendPointsCoords(dst []byte, points []geom.Point, dimension int) []byte {
 	return dst
 }
 
-func appendPointssCoords(dst []byte, pointss [][]geom.Point, dimension int) []byte {
+func appendPointssCoords(dst []byte, pointss geom.Polygon, dimension int) []byte {
 	for i, points := range pointss {
 		if i != 0 {
 			dst = append(dst, ',')

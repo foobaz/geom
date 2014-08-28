@@ -71,7 +71,7 @@ func writePoints(w io.Writer, byteOrder binary.ByteOrder, dimension int, points 
 	return nil
 }
 
-func writePointss(w io.Writer, byteOrder binary.ByteOrder, dimension int, pointss [][]geom.Point) error {
+func writePointss(w io.Writer, byteOrder binary.ByteOrder, dimension int, pointss geom.Polygon) error {
 	countErr := binary.Write(w, byteOrder, uint32(len(pointss)))
 	if countErr != nil {
 		return countErr

@@ -17,7 +17,7 @@ func Test(t *testing.T) {
 		},
 	}
 	for _, c := range cases {
-		if got, err := Encode(c.g, wkb.NDR); err != nil || got != c.ndr {
+		if got, err := Encode(c.g, wkb.NDR, geom.TwoD); err != nil || got != c.ndr {
 			t.Errorf("Encode(%#v, %#v) == %#v, %#v, want %#v, nil", c.g, wkb.NDR, got, err, c.ndr)
 		}
 	}
