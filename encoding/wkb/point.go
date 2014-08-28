@@ -22,7 +22,7 @@ func readPoints(r io.Reader, byteOrder binary.ByteOrder, dimension int) ([]geom.
 		return nil, err
 	}
 
-	components := make([]float64, int(numPoints) * dimension)
+	components := make([]float64, int(numPoints)*dimension)
 	if err := binary.Read(r, byteOrder, components); err != nil {
 		return nil, err
 	}
@@ -30,7 +30,7 @@ func readPoints(r io.Reader, byteOrder binary.ByteOrder, dimension int) ([]geom.
 	points := make([]geom.Point, numPoints)
 	for i := range points {
 		j := i + 1
-		points[i] = geom.Point(components[i*dimension:j*dimension])
+		points[i] = geom.Point(components[i*dimension : j*dimension])
 	}
 
 	return points, nil

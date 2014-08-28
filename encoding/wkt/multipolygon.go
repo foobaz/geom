@@ -9,7 +9,7 @@ func appendMultiPolygonWKT(dst []byte, multiPolygon geom.MultiPolygon, name []by
 	dst = append(dst, name...)
 	dst = append(dst, '(')
 	dst = append(dst, '(')
-	for i, pg := range multiPolygon{
+	for i, pg := range multiPolygon {
 		dst = appendPointssCoords(dst, pg, dimension)
 		if i != len(multiPolygon)-1 {
 			dst = append(dst, ')')
