@@ -40,7 +40,7 @@ func (b *Bounds) ExtendPoints(points []Point) *Bounds {
 	return b
 }
 
-func (b *Bounds) ExtendPointss(pointss [][]Point) *Bounds {
+func (b *Bounds) ExtendPointss(pointss Polygon) *Bounds {
 	for _, points := range pointss {
 		b.ExtendPoints(points)
 	}

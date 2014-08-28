@@ -66,8 +66,8 @@ func makeLinearRing(coordinates [][]float64) []geom.Point {
 	return points
 }
 
-func makeLinearRings(coordinates [][][]float64) [][]geom.Point {
-	pointss := make([][]geom.Point, len(coordinates))
+func makeLinearRings(coordinates [][][]float64) []geom.Ring {
+	pointss := make([]geom.Ring, len(coordinates))
 
 	for i, element := range coordinates {
 		pointss[i] = makeLinearRing(element)

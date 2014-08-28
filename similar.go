@@ -37,7 +37,7 @@ func pointsSimilar(p1s, p2s []Point, e float64) bool {
 	return true
 }
 
-func pointssSimilar(p1ss, p2ss [][]Point, e float64) bool {
+func pointssSimilar(p1ss, p2ss Polygon, e float64) bool {
 	if len(p1ss) != len(p2ss) {
 		return false
 	}

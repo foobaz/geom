@@ -1,6 +1,7 @@
 package geom
 
-type Polygon [][]Point
+type Ring []Point
+type Polygon []Ring
 
 func (polygon Polygon) Bounds(b *Bounds) *Bounds {
 	if b == nil {
