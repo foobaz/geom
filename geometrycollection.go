@@ -1,13 +1,11 @@
 package geom
 
-type GeometryCollection []Geom
+type GeometryCollection []T
 
-func (geometryCollection GeometryCollection) Bounds(b *Bounds) *Bounds {
-	if b == nil {
-		b = NewBounds()
+func (geometryCollection GeometryCollection) Bounds(b Bounds) Bounds {
+	for _, t := range geometryCollection {
+		b = t.Bounds(b)
 	}
-	for _, geom := range geometryCollection {
-		b = geom.Bounds(b)
-	}
+
 	return b
 }

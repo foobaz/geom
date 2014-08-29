@@ -16,10 +16,6 @@ func NewNPoint(s ...float64) Point {
 	return Point(s)
 }
 
-func (point Point) Bounds(b *Bounds) *Bounds {
-	if b == nil {
-		return NewBoundsPoint(point)
-	} else {
-		return b.ExtendPoint(point)
-	}
+func (point Point) Bounds(b Bounds) Bounds {
+	return b.ExtendPoint(point)
 }

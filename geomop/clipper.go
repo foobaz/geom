@@ -74,8 +74,8 @@ func (c *clipper) compute(operation Op) geom.T {
 	}
 
 	// Test 2 for trivial result case
-	subjectbb := c.subject.Bounds(nil)
-	clippingbb := c.clipping.Bounds(nil)
+	subjectbb := c.subject.Bounds(geom.NewBounds())
+	clippingbb := c.clipping.Bounds(geom.NewBounds())
 	if !subjectbb.Overlaps(clippingbb) {
 		switch operation {
 		case DIFFERENCE:

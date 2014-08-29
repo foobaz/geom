@@ -15,7 +15,7 @@ func geometryCollectionReader(r io.Reader, byteOrder binary.ByteOrder, dimension
 	for i := range geoms {
 		if g, err := Read(r); err == nil {
 			var ok bool
-			geoms[i], ok = g.(geom.Geom)
+			geoms[i], ok = g.(geom.T)
 			if !ok {
 				return nil, &UnexpectedGeometryError{g}
 			}

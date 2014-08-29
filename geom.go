@@ -8,9 +8,5 @@ const (
 )
 
 type T interface {
-	Bounds(*Bounds) *Bounds
-}
-
-type Geom interface {
-	T
+	Bounds(Bounds) Bounds
 }

@@ -9,7 +9,7 @@ import (
 
 type GeoJSONfeature struct {
 	Type       string             `json:"type"`
-	Geometry   *geojson.Geometry  `json:"geometry"`
+	Geometry   geojson.Geometry   `json:"geometry"`
 	Properties map[string]float64 `json:"properties"`
 }
 type GeoJSON struct {
@@ -67,7 +67,6 @@ func (g *GeoJSON) GetGeometry() ([]geom.T, error) {
 // Convert map data to GeoJSON, where value name is a
 // name for the data values being output.
 func (m *MapData) ToGeoJSON(valueName string) (*GeoJSON, error) {
-	var err error
 	g := new(GeoJSON)
 	g.Type = "FeatureCollection"
 	g.CRS = Crs{"name", CrsProps{"EPSG:3857"}}
@@ -75,10 +74,17 @@ func (m *MapData) ToGeoJSON(valueName string) (*GeoJSON, error) {
 	for i, shape := range m.Shapes {
 		f := new(GeoJSONfeature)
 		f.Type = "Feature"
-		f.Geometry, err = geojson.ToGeoJSON(shape)
+		serializable, err := geojson.ToGeoJSON(shape)
 		if err != nil {
 			return nil, err
 		}
+
+		geometry, ok := serializable.(geojson.Geometry)
+		if !ok {
+			continue
+		}
+
+		f.Geometry = geometry
 		f.Properties = map[string]float64{valueName: m.Data[i]}
 		g.Features[i] = f
 	}

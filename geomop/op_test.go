@@ -193,7 +193,7 @@ func TestDifficultShapes2(t *testing.T) {
 			{1.83002675e+06, -276575.625}, {1.831029e+06, -276552.5},
 			{1.832031125e+06, -276529.375}}})
 
-	b := shape.Bounds(nil)
+	b := shape.Bounds(geom.NewBounds())
 	bounds := geom.T(geom.Polygon{{
 		{b.Min[0], b.Min[1]}, {b.Max[0], b.Min[1]}, {b.Max[0], b.Max[1]},
 		{b.Min[0], b.Max[1]}, {b.Min[0], b.Min[1]}}})

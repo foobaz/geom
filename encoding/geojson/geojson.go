@@ -9,6 +9,18 @@ type Geometry struct {
 	Coordinates interface{} `json:"coordinates"`
 }
 
+type Feature struct {
+	Type       string `json:"type"`
+	Geometry   `json:"geometry"`
+	Properties interface{} `json:"properties,omitempty"`
+}
+
+type FeatureCollection struct {
+	Type       string      `json:"type"`
+	Features   []Feature   `json:"features"`
+	Properties interface{} `json:"properties,omitempty"`
+}
+
 type InvalidGeometryError struct{}
 
 func (e InvalidGeometryError) Error() string {

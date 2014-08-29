@@ -22,8 +22,8 @@ type Mapper interface {
 }
 
 type RasterMap struct {
-	bounds        *geom.Bounds // geographic boundaries of map
-	width, height int          // pixel dimensions of map
+	bounds        geom.Bounds // geographic boundaries of map
+	width, height int         // pixel dimensions of map
 	dx, dy        float64
 	f             io.Writer
 	I             draw.Image
@@ -72,7 +72,7 @@ func (r *RasterMap) DrawVector(g geom.T, strokeColor,
 	if g == nil {
 		return
 	}
-	gbounds := g.Bounds(nil)
+	gbounds := g.Bounds(geom.NewBounds())
 	if !gbounds.Overlaps(r.bounds) {
 		return
 	}
