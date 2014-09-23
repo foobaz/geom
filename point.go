@@ -19,3 +19,18 @@ func NewNPoint(s ...float64) Point {
 func (point Point) Bounds(b Bounds) Bounds {
 	return b.ExtendPoint(point)
 }
+
+func (point Point) Equal(other Point) bool {
+	n := len(point)
+	if n != len(other) {
+		return false
+	}
+
+	for i := 0; i < n; i++ {
+		if point[i] != other[i] {
+			return false
+		}
+	}
+
+	return true
+}
