@@ -153,6 +153,10 @@ func isLeft(P0, P1, P2 geom.Point) float64 {
 		(P2[0]-P0[0])*(P1[1]-P0[1]))
 }
 
+// MD NOTE! As of 2/2016 this cannot be relief upon,
+// polyInPoly calls a pointInPoly routine that
+// is buggy.
+//
 // Change the winding direction of the outer and inner
 // rings so the outer ring is counter-clockwise and
 // nesting rings alternate directions.
@@ -171,6 +175,23 @@ func FixOrientation(g geom.T) {
 		if numInside%2 == 1 && o[i] > 0. {
 			reversePolygon(inner)
 		} else if numInside%2 == 0 && o[i] < 0. {
+			reversePolygon(inner)
+		}
+	}
+}
+
+// Change the winding direction of the outer and inner
+// outer ring is counter-clockwise and every subsequent ring
+// is clockwise.
+func ForceOrientation(g geom.T) {
+	p := g.(geom.Polygon)
+	o := orientation(p)
+	for i, inner := range p {
+		if i == 0 && o[i] < 0. {
+			// outer loop must have positive orientation
+			reversePolygon(inner)
+		} else if o[1] > 0. {
+			// inner loops must all have negative orientation
 			reversePolygon(inner)
 		}
 	}
