@@ -190,7 +190,7 @@ func ForceOrientation(g geom.T) {
 		if i == 0 && o[i] < 0. {
 			// outer loop must have positive orientation
 			reversePolygon(inner)
-		} else if o[1] > 0. {
+		} else if i > 0 && o[i] > 0. {
 			// inner loops must all have negative orientation
 			reversePolygon(inner)
 		}
