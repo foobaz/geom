@@ -1,10 +1,20 @@
 package geomop
 
+// Simplify performs Ramer-Douglas-Peucker simplification.
+
 import (
 	"github.com/foobaz/geom"
 )
 
-// Simplify performs Ramer-Douglas-Peucker simplification.
+// there are two components that might be extremely slow
+// the ring simplification algorithm searches for the
+// maximally separated nodes, which is O(n^2), and the
+// RDP simplification itself is typically O(n log n) but
+// is O(n^2) in its worst case.
+//
+// If a poly with more than maxNodesToSimplify is used
+// as input to the simplifier it will return the original.
+const maxNodesToSimplify = 10000
 
 func Simplify(g geom.T, eps float64) {
 	switch (g).(type) {
@@ -32,20 +42,37 @@ func SimplifyRing(r geom.Ring, eps float64) geom.Ring {
 	if numPoints < 4 {
 		return r
 	}
-	p0 := r[0]
+	// to prevent this from bogging down on a ridiculous
+	// input
+	if numPoints > maxNodesToSimplify {
+		return r
+	}
+	// find the two points with maximal separation,
+	// and use those two points to create the polylines
+	// which will be simplified
+	//
+	// this should result in stable simplification,
+	// meaning that the resulting simplified polygon
+	// will be the same when processed with a
+	// different starting point.
 	maxDistance := 0.0
-	maxIndex := 0
-	for i := 1; i < numPoints; i++ {
-		dist := d(p0, r[i])
-		if dist > maxDistance {
-			maxDistance = dist
-			maxIndex = i
+	startIndex := 0
+	endIndex := 0
+	for i := 0; i < (numPoints - 1); i++ {
+		for j := i + 1; j < numPoints; j++ {
+			dist := d(r[i], r[j])
+			if dist > maxDistance {
+				maxDistance = dist
+				startIndex = i
+				endIndex = j
+			}
 		}
 	}
 	var s1, s2 []geom.Point
-	s1 = append(s1, r[0:maxIndex+1]...)
-	s2 = append(s2, r[maxIndex:]...)
-	s2 = append(s2, r[0])
+	// note: the nodes at startIndex and endIndex must be in both polylines
+	s1 = append(s1, r[startIndex:endIndex+1]...)
+	s2 = append(s2, r[endIndex:]...)
+	s2 = append(s2, r[:startIndex+1]...)
 
 	news1 := rdpSimplify(s1, eps)
 	news2 := rdpSimplify(s2, eps)
