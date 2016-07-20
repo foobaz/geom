@@ -4,6 +4,14 @@ package geomop
 
 import (
 	"github.com/foobaz/geom"
+	"math"
+)
+
+type algorithm int
+
+const (
+	TypeRDP algorithm = iota
+	TypeGrid
 )
 
 // there are two components that might be extremely slow
@@ -16,34 +24,55 @@ import (
 // as input to the simplifier it will return the original.
 const maxNodesToSimplify = 10000
 
-func Simplify(g geom.T, eps float64) {
+func Simplify(g geom.T, eps float64, alg algorithm) {
 	switch (g).(type) {
 	case geom.Polygon:
 		p := g.(geom.Polygon)
 		for n, r := range p {
-			p[n] = SimplifyRing(r, eps)
+			// note if the first and last points are the same
+			inputDupe := d(r[0], r[len(r)-1]) < tolerance
+			newRing := simplifyRing(r, eps, alg)
+			// if our first and last were the same before, make it so now
+			if inputDupe {
+				outputDupe := d(newRing[0], newRing[len(newRing)-1]) < tolerance
+				if !outputDupe {
+					newRing = append(newRing, newRing[0])
+				}
+			}
+			p[n] = newRing
+
 		}
 	case geom.MultiPolygon:
 		for _, p := range g.(geom.MultiPolygon) {
-			Simplify(p, eps)
+			Simplify(p, eps, alg)
 		}
 	case geom.GeometryCollection:
 		for _, g := range g.(geom.GeometryCollection) {
-			Simplify(g, eps)
+			Simplify(g, eps, alg)
 		}
 	}
 }
 
 // Simplify a single ring; return the new ring.
-func SimplifyRing(r geom.Ring, eps float64) geom.Ring {
-	// handle the ring case, break it down into two lines.
+func simplifyRing(r geom.Ring, eps float64, alg algorithm) geom.Ring {
 	// rule out degenerate case
-	numPoints := len(r)
-	if numPoints < 4 {
+	if len(r) < 4 {
 		return r
 	}
+	// which type of simplification?
+	switch alg {
+	case TypeRDP:
+		return simplifyRingRDP(r, eps)
+	case TypeGrid:
+		return simplifyRingGrid(r, eps)
+	default:
+		panic("unknown poly simplification method invoked")
+	}
+}
+func simplifyRingRDP(r geom.Ring, eps float64) geom.Ring {
 	// to prevent this from bogging down on a ridiculous
 	// input
+	numPoints := len(r)
 	if numPoints > maxNodesToSimplify {
 		return r
 	}
@@ -83,6 +112,37 @@ func SimplifyRing(r geom.Ring, eps float64) geom.Ring {
 	newRing = append(newRing, news2[1:len(news2)-1]...)
 
 	return newRing
+}
+
+func simplifyRingGrid(r geom.Ring, eps float64) geom.Ring {
+	var newCoords []geom.Point
+	for i := 0; i < len(r); i++ {
+		newPoint := roundedPoint(r[i], eps)
+		count := len(newCoords)
+		// add if it's the first point or different from the most recent point
+		if count == 0 || d(newPoint, newCoords[count-1]) > tolerance {
+			newCoords = append(newCoords, newPoint)
+		}
+	}
+
+	// check for collinearity
+	// this check is a little more robust due to the removal of repeated points above
+	cursor := 0
+	polySize := len(newCoords)
+	for cursor < polySize {
+		// get indices for point before and after
+		before := (cursor + polySize - 1) % polySize
+		after := (cursor + 1) % polySize
+		if distPointToSegment(newCoords[cursor], newCoords[before], newCoords[after]) < tolerance {
+			// remove the point, reduce the size, leave the cursor alone
+			newCoords = append(newCoords[:cursor], newCoords[cursor+1:]...)
+			polySize--
+		} else {
+			// keep this point, bump the cursor
+			cursor++
+		}
+	}
+	return geom.Ring(newCoords)
 }
 
 func rdpSimplify(points []geom.Point, epsilon float64) []geom.Point {
@@ -131,4 +191,17 @@ func rdpCompress(points []geom.Point, epsilon float64) int {
 	n := copy(points[x:], points[index:index+r2])
 
 	return x + n
+}
+
+func roundedPoint(p geom.Point, eps float64) geom.Point {
+	// protect against stupidity
+	if eps == 0.0 {
+		return p
+	}
+	var newPoint geom.Point
+	for i := 0; i < len(p); i++ {
+		coord := math.Floor(p[i]/eps+0.5) * eps
+		newPoint = append(newPoint, coord)
+	}
+	return newPoint
 }
