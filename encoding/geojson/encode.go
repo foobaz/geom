@@ -10,7 +10,7 @@ import (
 func ToGeoJSON(t geom.T) (interface{}, error) {
 	switch g := t.(type) {
 	case geom.Point:
-		return &Geometry{
+		return Geometry{
 			Type:        "Point",
 			Coordinates: g,
 		}, nil
