@@ -24,6 +24,16 @@ const (
 // as input to the simplifier it will return the original.
 const maxNodesToSimplify = 10000
 
+// gridded simplification is followed by an attempt to clip off
+// degenerate structures such as ears or zero-width peninsulas
+// this is the number of nodes that will be searched ahead
+// when looking for these degenerate structures
+//
+// TODO: get rid of this magic number.
+// search through the whole poly for ears and in each case
+// keep the side with the greater area.
+const earSearchNodes = 9
+
 func Simplify(g geom.T, eps float64, alg algorithm) {
 	switch (g).(type) {
 	case geom.Polygon:
@@ -133,7 +143,10 @@ func simplifyRingGrid(r geom.Ring, eps float64) geom.Ring {
 		// get indices for point before and after
 		before := (cursor + polySize - 1) % polySize
 		after := (cursor + 1) % polySize
-		if distPointToSegment(newCoords[cursor], newCoords[before], newCoords[after]) < tolerance {
+		// maybe optimize this sometime
+		triangle := []geom.Point{newCoords[before], newCoords[cursor], newCoords[after]}
+		if math.Abs(area(triangle)) < tolerance {
+			//if distPointToSegment(newCoords[cursor], newCoords[before], newCoords[after]) < tolerance {
 			// remove the point, reduce the size, leave the cursor alone
 			newCoords = append(newCoords[:cursor], newCoords[cursor+1:]...)
 			polySize--
@@ -142,6 +155,37 @@ func simplifyRingGrid(r geom.Ring, eps float64) geom.Ring {
 			cursor++
 		}
 	}
+
+	// check for ears/degenerate structures
+	cursor = 0
+	polySize = len(newCoords)
+	for cursor < polySize {
+		clipped := false
+		for i := 2; !clipped && i < earSearchNodes; i++ {
+			after := (cursor + i) % polySize
+			if d(newCoords[cursor], newCoords[after]) < tolerance {
+				// make sure this won't result in a degenerate poly
+				// if we remove it...
+				if (polySize - i) > 3 {
+					// safe to remove
+					clipped = true
+					polySize -= i
+					// removing from the middle?
+					if after > cursor {
+						newCoords = append(newCoords[:cursor], newCoords[cursor+i:]...)
+					} else {
+						// potentially removing from both ends
+						newCoords = newCoords[after:cursor]
+					}
+				}
+			}
+		}
+		// if we didn't clip, the cursor needs to be advanced.
+		if !clipped {
+			cursor++
+		}
+	}
+
 	return geom.Ring(newCoords)
 }
 
