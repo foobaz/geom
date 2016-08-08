@@ -29,6 +29,30 @@ func Area(g geom.T) float64 {
 	return math.Abs(a)
 }
 
+// Function SignedArea returns the area of a polygon, or the combined area of a
+// MultiPolygon, assuming that none of the polygons in the MultiPolygon
+// overlap and that nested polygons have alternating winding directions.
+func SignedArea(i interface{}) float64 {
+	a := 0.
+	switch i.(type) {
+	case geom.Ring:
+		a += area(i.(geom.Ring))
+	case geom.Polygon:
+		for _, r := range i.(geom.Polygon) {
+			a += area(r)
+		}
+	case geom.MultiPolygon:
+		for _, p := range i.(geom.MultiPolygon) {
+			a += SignedArea(p)
+		}
+	case geom.GeometryCollection:
+		for _, g := range i.(geom.GeometryCollection) {
+			a += SignedArea(g)
+		}
+	}
+	return a
+}
+
 // Function Length returns the length of a LineString, or the combined
 // length of a MultiLineString.
 func Length(g geom.T) float64 {
