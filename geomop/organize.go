@@ -2,18 +2,26 @@ package geomop
 
 import (
 	"github.com/foobaz/geom"
+
+	"math"
 )
 
+// TODO: this should be a parameter and not a magic number
+const minArea = 1e-8
+
 // Organize takes a polygon with a number of rings of any winding order,
-// and returns a slice of polygons each of which have only one positive
+// and returns
+// 1) a slice of polygons each of which have only one positive
 // area ring and any holes that lie inside that outer ring.
-func Organize(poly geom.Polygon) []geom.Polygon {
+// 2) a polygon with all the rings that couldn't be processed
+func Organize(poly geom.Polygon) ([]geom.Polygon, geom.Polygon) {
 	// output
 	var result []geom.Polygon
+	var leftovers geom.Polygon
 
 	// degenerate case
 	if len(poly) == 0 {
-		return result
+		return result, leftovers
 	}
 
 	// first, sort into negative and positive rings
@@ -28,19 +36,24 @@ func Organize(poly geom.Polygon) []geom.Polygon {
 
 	for _, r := range poly {
 		a := area(r)
-		if a > 0 {
+		// some input polys may be optimized away to nothing.
+		// drop any with ~zero area, put the others in the
+		// positive and negative buckets
+		switch {
+		case math.Abs(a) < minArea:
+			leftovers = append(leftovers, r)
+		case a > 0:
 			pos = append(pos, posRing{p: r,
 				area: a,
 			})
-		} else {
+		default:
 			neg = append(neg, r)
 		}
 	}
 
 	// another degenerate case
-	// TODO: error here?
 	if len(pos) == 0 {
-		return result
+		return result, geom.Polygon(neg)
 	}
 
 	// ok, must have positive rings at least. match up the holes if any
@@ -65,6 +78,9 @@ func Organize(poly geom.Polygon) []geom.Polygon {
 		}
 		if found {
 			pos[bestIndex].holes = append(pos[bestIndex].holes, n)
+		} else {
+			// fail. put it in the leftovers
+			leftovers = append(leftovers, h)
 		}
 	}
 
@@ -77,5 +93,5 @@ func Organize(poly geom.Polygon) []geom.Polygon {
 		}
 		result = append(result, Clone(newp))
 	}
-	return result
+	return result, leftovers
 }

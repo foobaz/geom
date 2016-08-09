@@ -1,5 +1,10 @@
 package geom
 
+import (
+	"fmt"
+	"math"
+)
+
 const (
 	X = iota
 	Y
@@ -33,4 +38,17 @@ func (point Point) Equal(other Point) bool {
 	}
 
 	return true
+}
+
+func (point Point) DistanceTo(other Point) (float64, error) {
+	// a point distance function with an error return.
+	// don't see that every day, do you?
+	if len(point) != len(other) {
+		return 0, fmt.Errorf("Error: points have cardinality %v and %v\n", len(point), len(other))
+	}
+	a := 0.0
+	for i := 0; i < len(point); i++ {
+		a += (point[i] - other[i]) * (point[i] - other[i])
+	}
+	return math.Sqrt(a), nil
 }

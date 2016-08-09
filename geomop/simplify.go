@@ -34,6 +34,11 @@ const maxNodesToSimplify = 10000
 // keep the side with the greater area.
 const earSearchNodes = 9
 
+func SimplifyLine(l geom.LineString, eps float64) geom.LineString {
+	newL := rdpSimplify(l, eps)
+	return newL
+}
+
 func Simplify(g geom.T, eps float64, alg algorithm) {
 	switch (g).(type) {
 	case geom.Polygon:
