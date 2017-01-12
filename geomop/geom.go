@@ -71,7 +71,6 @@ func (c Contour) segment(index int) segment {
 // See: http://en.wikipedia.org/wiki/Point_in_polygon#Ray_casting_algorithm
 // Returns true if p is inside the polygon defined by contour.
 func (c Contour) Contains(p geom.Point) bool {
-	// Cast ray from p[0] towards the right
 	intersections := 0
 	for i := range c {
 		curr := c[i]
@@ -81,25 +80,61 @@ func (c Contour) Contains(p geom.Point) bool {
 		}
 		next := c[ii]
 
-		if (p[1] >= next[1] || p[1] <= curr[1]) &&
-			(p[1] >= curr[1] || p[1] <= next[1]) {
-			continue
+		// see if a ray cast to the right crosses this segment
+		if rayCrosses(p, curr, next) {
+			intersections++
 		}
-		// Edge is from curr to next.
-
-		if p[0] >= math.Max(curr[0], next[0]) ||
-			next[1] == curr[1] {
-			continue
-		}
-
-		// Find where the line intersects...
-		xint := (p[1]-curr[1])*(next[0]-curr[0])/(next[1]-curr[1]) + curr[0]
-		if curr[0] != next[0] && p[0] > xint {
-			continue
-		}
-		intersections++
 	}
 	return intersections%2 != 0
+}
+
+func rayCrosses(rayOrigin, start, end geom.Point) bool {
+	p := geom.New2Point(rayOrigin[0], rayOrigin[1])
+	// ensure the segment is flat or heads upward
+	if start[1] > end[1] {
+		start, end = end, start
+	}
+
+	// nudge the point if it matches a segment component
+	// this should not affect correctness for any point
+	// that is fully inside the polygon, and by definition
+	// the algorithm is unpredictable due to rounding error
+	// for points on the polygon boundary.
+	for p[1] == start[1] || p[1] == end[1] {
+		p[1] = math.Nextafter(p[1], math.Inf(1))
+	}
+	for p[0] == start[0] || p[0] == end[0] {
+		p[0] = math.Nextafter(p[0], math.Inf(1))
+	}
+
+	// is an intersection even possible?
+	if p[1] < start[1] || p[1] > end[1] {
+		return false
+	}
+
+	// ok, the y-coords indicate a possible intersection
+	// check to see if an intersection is certain or impossible
+	if start[0] > end[0] {
+		if p[0] > start[0] {
+			// point to right of rightmost segment point, crossing impossible
+			return false
+		}
+		if p[0] < end[0] {
+			// point to left of leftmost segment point, crossing certain
+			return true
+		}
+	} else {
+		if p[0] > end[0] {
+			// point to right of rightmost segment point, crossing impossible
+			return false
+		}
+		if p[0] < start[0] {
+			// point to left of leftmost segment point, crossing certain
+			return true
+		}
+	}
+	// compare slopes to see if the ray crosses
+	return (p[1]-start[1])/(p[0]-start[0]) >= (end[1]-start[1])/(end[0]-start[0])
 }
 
 // Clone returns a copy of a contour.
